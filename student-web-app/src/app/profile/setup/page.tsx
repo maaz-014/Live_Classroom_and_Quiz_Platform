@@ -63,7 +63,8 @@ export default function ProfileSetupPage() {
     // Upload photo if selected
     if (avatarFile) {
       const ext = avatarFile.name.split('.').pop()
-      const path = `avatars/${userId}.${ext}`
+      // Path is just `{userId}.{ext}` — no folder prefix needed since the bucket is already "avatars"
+      const path = `${userId}.${ext}`
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(path, avatarFile, { upsert: true })
@@ -121,11 +122,11 @@ export default function ProfileSetupPage() {
           <div className="ps-logo">
             <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
               <rect width="32" height="32" rx="10" fill="url(#psGrad)" />
-              <path d="M8 22L16 10L24 22" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M11 18H21" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+              <path d="M8 22L16 10L24 22" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M11 18H21" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
               <defs>
                 <linearGradient id="psGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#6366f1"/><stop offset="1" stopColor="#8b5cf6"/>
+                  <stop stopColor="#6366f1" /><stop offset="1" stopColor="#8b5cf6" />
                 </linearGradient>
               </defs>
             </svg>
