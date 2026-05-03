@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import ClientAvatar from '@/components/ClientAvatar'
+import PushNotificationManager from '@/components/PushNotificationManager'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -10,18 +12,9 @@ export default async function DashboardPage() {
   // Fetch student profile
   const { data: profile } = await supabase
     .from('users')
-    .select('full_name, avatar_url')
+    .select('full_name, avatar_url, role')
     .eq('id', user.id)
     .single()
-
-  // If no profile yet, redirect to setup
-  if (!profile?.full_name) redirect('/profile/setup')
-
-  // Fetch enrolled courses
-  const { data: enrollments } = await supabase
-    .from('enrollments')
-    .select('course_id, courses(id, title, description)')
-    .eq('student_id', user.id)
 
   async function signOut() {
     'use server'
@@ -29,6 +22,39 @@ export default async function DashboardPage() {
     await supabase.auth.signOut()
     redirect('/login')
   }
+
+  // Prevent teachers from accessing student portal
+  if (profile?.role === 'teacher') {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#08080f' }}>
+        <div className="dash-container text-center max-w-md w-full" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px', padding: '40px 32px' }}>
+          <div className="text-5xl mb-4">🚫</div>
+          <h2 className="text-xl font-bold text-red-400 mb-3">Access Denied</h2>
+          <p className="text-gray-400 text-sm leading-relaxed mb-6">
+            This email is registered as a Teacher. You cannot use the same email for both student and teacher accounts.
+          </p>
+          <form action={signOut}>
+            <button className="bg-red-500/10 text-red-400 border border-red-500/20 px-6 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-500/20 transition-all w-full">
+              Sign out
+            </button>
+          </form>
+        </div>
+      </div>
+    )
+  }
+
+  // If no profile yet, redirect to setup
+  if (!profile?.full_name) redirect('/profile/setup')
+
+
+
+  // Fetch enrolled courses
+  const { data: enrollments } = await supabase
+    .from('enrollments')
+    .select('course_id, courses(id, title, description)')
+    .eq('student_id', user.id)
+
+
 
   const courses = enrollments?.map((e: any) => e.courses).filter(Boolean) ?? []
   const initials = profile.full_name
@@ -54,17 +80,18 @@ export default async function DashboardPage() {
                 </linearGradient>
               </defs>
             </svg>
-            <span>ClassHub</span>
+            <Link href="/dashboard" className="text-[#f0f0ff] no-underline hover:text-indigo-300 transition-colors">ClassHub</Link>
           </div>
           <div className="nav-right">
+            <Link href="/progress" className="text-sm font-medium text-gray-400 hover:text-indigo-300 transition-colors mr-4 hidden sm:block">Progress</Link>
             <Link href="/courses/enroll" className="enroll-nav-btn">+ Enroll in Course</Link>
             <Link href="/profile/setup" className="avatar-link">
-              {profile.avatar_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={profile.avatar_url} alt="avatar" className="nav-avatar-img" />
-              ) : (
-                <div className="nav-avatar">{initials}</div>
-              )}
+              <ClientAvatar 
+                url={profile.avatar_url} 
+                initials={initials} 
+                className="nav-avatar-img" 
+                fallbackClassName="nav-avatar" 
+              />
             </Link>
             <form action={signOut}>
               <button className="signout-btn">Sign out</button>
@@ -87,6 +114,8 @@ export default async function DashboardPage() {
         <div className="hero-blob" />
       </div>
 
+      <PushNotificationManager />
+
       {/* Main content */}
       <main className="dash-main">
         <div className="dash-container">
@@ -100,7 +129,7 @@ export default async function DashboardPage() {
           {courses.length > 0 ? (
             <div className="courses-grid">
               {courses.map((course: any, i: number) => (
-                <div key={course.id} className="course-card" style={{ animationDelay: `${i * 60}ms` }}>
+                <Link href={`/courses/${course.id}`} key={course.id} className="course-card" style={{ animationDelay: `${i * 60}ms` }}>
                   <div className="course-accent" style={{ background: COURSE_COLORS[i % COURSE_COLORS.length] }} />
                   <div className="course-body">
                     <h3 className="course-name">{course.title}</h3>
@@ -109,7 +138,7 @@ export default async function DashboardPage() {
                   <div className="course-footer">
                     <span className="course-tag">Enrolled</span>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (

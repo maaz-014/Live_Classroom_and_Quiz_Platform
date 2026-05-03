@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import ClientAvatar from '@/components/ClientAvatar'
 
 export default function ProfileSetupPage() {
   const supabase = useMemo(() => createClient(), [])
@@ -30,11 +31,15 @@ export default function ProfileSetupPage() {
 
       const { data: profile } = await supabase
         .from('users')
-        .select('full_name, avatar_url')
+        .select('full_name, avatar_url, role')
         .eq('id', user.id)
         .single()
 
       if (profile) {
+        if (profile.role === 'teacher') {
+          router.replace('/dashboard')
+          return
+        }
         setFullName(profile.full_name ?? '')
         setExistingAvatar(profile.avatar_url ?? null)
       }
@@ -76,16 +81,16 @@ export default function ProfileSetupPage() {
       }
 
       const { data: publicData } = supabase.storage.from('avatars').getPublicUrl(path)
-      avatarUrl = publicData.publicUrl
+      avatarUrl = `${publicData.publicUrl}?t=${Date.now()}`
     }
 
     // Upsert profile in users table
-    const { error: upsertError } = await supabase.from('users').upsert({
+    const { data: updatedUser, error: upsertError } = await supabase.from('users').upsert({
       id: userId,
       full_name: fullName.trim(),
       avatar_url: avatarUrl,
       role: 'student',
-    })
+    }).select().single()
 
     if (upsertError) {
       setError('Failed to save profile: ' + upsertError.message)
@@ -94,7 +99,10 @@ export default function ProfileSetupPage() {
     }
 
     setSuccess(true)
-    setTimeout(() => router.push('/dashboard'), 1200)
+    setTimeout(() => {
+      router.refresh()
+      router.push('/dashboard')
+    }, 1200)
   }
 
   const displayAvatar = avatarPreview ?? existingAvatar
@@ -145,8 +153,12 @@ export default function ProfileSetupPage() {
             onKeyDown={e => e.key === 'Enter' && fileRef.current?.click()}
           >
             {displayAvatar ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={displayAvatar} alt="avatar" className="avatar-img" />
+              <ClientAvatar
+                url={displayAvatar}
+                initials={initials}
+                className="avatar-img"
+                fallbackClassName="avatar-placeholder"
+              />
             ) : (
               <div className="avatar-placeholder">{initials}</div>
             )}

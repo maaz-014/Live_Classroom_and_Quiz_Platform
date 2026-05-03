@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import TeacherNav from '@/components/TeacherNav'
 
 export default function SessionsPage() {
   const { courseId, quizId } = useParams()
@@ -70,54 +71,53 @@ export default function SessionsPage() {
   if (loading) return <div className="p-8">Loading...</div>
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
+      <TeacherNav backHref={`/courses/${courseId}/quiz/${quizId}`} backLabel="Back to Quiz" />
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8 glass-panel rounded-3xl p-8">
           <div>
-            <button
-              onClick={() => router.push(`/courses/${courseId}/quiz/${quizId}`)}
-              className="text-sm text-gray-500 hover:text-gray-700 mb-1 block"
-            >
-              ← Back to Quiz
-            </button>
-            <h1 className="text-2xl font-bold text-gray-800">Live Sessions</h1>
-            <p className="text-sm text-gray-500 mt-1">{quiz?.title}</p>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Live Sessions</h1>
+            <p className="text-sm text-indigo-400/80 mt-2 font-medium tracking-wide">{quiz?.title}</p>
           </div>
           <button
             onClick={handleLaunchSession}
             disabled={launching}
-            className="bg-green-600 text-white px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-5 py-3 rounded-xl text-sm font-semibold hover:opacity-90 hover:-translate-y-0.5 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] whitespace-nowrap disabled:opacity-50"
           >
             {launching ? 'Launching...' : '+ Launch New Session'}
           </button>
         </div>
 
         {error && (
-          <p className="text-red-500 text-sm mb-4">{error}</p>
+          <div className="bg-red-900/20 text-red-400 p-4 rounded-xl border border-red-500/30 mb-6">
+            <strong>Error:</strong> {error}
+          </div>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {sessions.length === 0 && (
-            <div className="text-center py-12 bg-white rounded-xl border text-gray-400">
-              No sessions yet. Launch your first live session above.
+            <div className="text-center py-16 glass-panel rounded-3xl border-dashed text-gray-400">
+              <p className="text-5xl mb-4 opacity-50">📡</p>
+              <p className="text-lg font-medium text-white">No sessions yet.</p>
+              <p className="text-sm mt-1">Launch your first live session above.</p>
             </div>
           )}
           {sessions.map((s) => (
             <div
               key={s.id}
-              className="bg-white rounded-xl border p-4 flex items-center justify-between"
+              className="glass-panel rounded-2xl p-6 flex items-center justify-between hover:border-[#6366f1]/30 transition-colors"
             >
               <div>
-                <span className={`text-xs font-medium px-2 py-0.5 rounded ${
+                <span className={`text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-widest ${
                   s.status === 'active'
-                    ? 'bg-green-50 text-green-700'
+                    ? 'bg-emerald-500/20 text-emerald-400'
                     : s.status === 'waiting'
-                    ? 'bg-yellow-50 text-yellow-700'
-                    : 'bg-gray-100 text-gray-500'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-white/5 text-gray-400'
                 }`}>
-                  {s.status.toUpperCase()}
+                  {s.status}
                 </span>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-gray-400 mt-3 font-medium">
                   {s.started_at
                     ? new Date(s.started_at).toLocaleString()
                     : 'Not started yet'}
@@ -125,7 +125,7 @@ export default function SessionsPage() {
               </div>
               <button
                 onClick={() => router.push(`/courses/${courseId}/quiz/${quizId}/sessions/${s.id}`)}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors bg-indigo-500/10 px-4 py-2 rounded-lg"
               >
                 Open →
               </button>

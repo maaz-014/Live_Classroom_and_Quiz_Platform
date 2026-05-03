@@ -35,10 +35,15 @@ export default function EnrollPage() {
       setUserId(user.id)
 
       // Load all available courses (with teacher name via join)
-      const { data: allCourses } = await supabase
+      const { data: allCourses, error: coursesError } = await supabase
         .from('courses')
-        .select('id, title, description, enrollment_code, users(full_name)')
+        .select('id, title, description, enrollment_code, users!courses_teacher_id_fkey(full_name)')
         .order('created_at', { ascending: false })
+
+      if (coursesError) {
+        console.error('Failed to fetch courses:', coursesError)
+        setCodeError('DB Error: ' + coursesError.message) // Display the error on screen using the existing codeError state
+      }
 
       // Load student's current enrollments
       const { data: myEnrollments } = await supabase
