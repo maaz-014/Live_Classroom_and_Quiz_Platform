@@ -98,7 +98,7 @@ export async function POST(request: Request) {
                 <h2>A new live quiz is starting!</h2>
                 <p>Your teacher has just launched: <strong>${quizTitle}</strong></p>
                 <p style="margin-top: 30px;">
-                  <a href="${process.env.NEXT_PUBLIC_STUDENT_APP_URL || 'http://localhost:3000'}/dashboard" 
+                  <a href="${process.env.NEXT_PUBLIC_STUDENT_APP_URL || 'https://live-classroom-and-quiz-platform-student-web.vercel.app'}/dashboard" 
                      style="background: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
                     Join Quiz Now
                   </a>
