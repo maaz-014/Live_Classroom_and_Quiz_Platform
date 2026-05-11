@@ -87,30 +87,7 @@ export default function SessionPage() {
         setSession(payload.new)
       }
     })
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'questions' }, async (payload) => {
-      // Re-fetch questions ordered by order_index whenever a new question is added to this quiz
-      const sessionRes = await supabase.from('sessions').select('quiz_id').eq('id', sessionId).single()
-      if (sessionRes.data && payload.new.quiz_id === sessionRes.data.quiz_id) {
-        const { data: questionsData } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('quiz_id', sessionRes.data.quiz_id)
-          .order('order_index')
-        setQuestions(questionsData || [])
-      }
-    })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'questions' }, async () => {
-      // Re-fetch questions if one is deleted
-      const sessionRes = await supabase.from('sessions').select('quiz_id').eq('id', sessionId).single()
-      if (sessionRes.data) {
-        const { data: questionsData } = await supabase
-          .from('questions')
-          .select('*')
-          .eq('quiz_id', sessionRes.data.quiz_id)
-          .order('order_index')
-        setQuestions(questionsData || [])
-      }
-    })
+    
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers' }, async (payload) => {
       if (payload.new.session_id === sessionId) {
         const { data: userData } = await supabase.from('users').select('full_name').eq('id', payload.new.student_id).single()
